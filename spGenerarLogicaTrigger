@@ -1,0 +1,46 @@
+PROCEDURE `spGenerarLogicaTrigger`(IN nombre_tabla VARCHAR(100), IN opcion VARCHAR(1))
+BEGIN
+	DECLARE v_finished INTEGER DEFAULT 0;
+	DECLARE field VARCHAR(100);
+    DECLARE NRO_FIELD INTEGER DEFAULT 1;
+	DECLARE texto_trigger TEXT DEFAULT "";
+	DECLARE c1 CURSOR FOR
+	  SELECT column_name
+	  FROM INFORMATION_SCHEMA.COLUMNS
+	  WHERE table_name = nombre_tabla
+	  ORDER BY ordinal_position;
+	DECLARE CONTINUE HANDLER FOR NOT FOUND SET v_finished = 1;
+    SET texto_trigger = CONCAT(texto_trigger,'SET @antes = ',"'",'{"":""',"'",";\n");
+    SET texto_trigger = CONCAT(texto_trigger,'SET @ahora = ',"'",'{"":""',"'",";\n");
+    OPEN c1;
+		c1_loop: LOOP
+		FETCH c1 INTO field;
+		IF v_finished = 1 THEN
+			SET texto_trigger = CONCAT(texto_trigger,"\n",'SET @antes = CONCAT(@antes,',"'",'}',"'",");\n");
+            SET texto_trigger = CONCAT(texto_trigger,'SET @ahora = CONCAT(@ahora,',"'",'}',"'",");\n");
+			SELECT texto_trigger;
+			LEAVE c1_loop;
+		END IF;
+	IF opcion = 'I' THEN
+		SET texto_trigger = CONCAT(texto_trigger,"IF NEW.",field," IS NOT NULL"," THEN \n");
+		SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @ahora = CONCAT(@ahora,','","',");\n");
+		SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @ahora = CONCAT(@ahora,',"'",'"',field,'":"',"'",',NEW.',field,",'",'"',"'",');',"\n");
+		SET texto_trigger = CONCAT(texto_trigger,"END IF;");
+    END IF;
+    IF opcion = 'U' THEN
+		SET texto_trigger = CONCAT(texto_trigger,"IF NEW.",field," <> OLD.",field," THEN \n");
+		SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @ahora = CONCAT(@ahora,','","',");\n");
+        SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @antes = CONCAT(@antes,','","',");\n");
+        SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @antes = CONCAT(@antes,',"'",'"',field,'":"',"'",',OLD.',field,",'",'"',"'",');',"\n");
+        SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @ahora = CONCAT(@ahora,',"'",'"',field,'":"',"'",',NEW.',field,",'",'"',"'",');',"\n");
+        SET texto_trigger = CONCAT(texto_trigger,"END IF;");
+    END IF;
+    IF opcion = 'D' THEN
+		SET texto_trigger = CONCAT(texto_trigger,"IF OLD.",field," IS NOT NULL"," THEN \n");
+			SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @antes = CONCAT(@ahora,','","',");\n");
+        SET texto_trigger = CONCAT(texto_trigger,"\t",'SET @antes = CONCAT(@antes,',"'",'"',field,'":"',"'",',OLD.',field,",'",'"',"'",');',"\n");
+        SET texto_trigger = CONCAT(texto_trigger,"END IF;");
+    END IF;
+    END LOOP c1_loop;
+	CLOSE c1;
+END
