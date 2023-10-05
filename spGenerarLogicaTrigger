@@ -40,7 +40,7 @@ BEGIN
 			SET texto_trigger = CONCAT(texto_trigger,"\n",'SET @antes = CONCAT(@antes,',"'",'}',"'",");\n");
             SET texto_trigger = CONCAT(texto_trigger,'SET @ahora = CONCAT(@ahora,',"'",'}',"'",");\n");
             SET texto_trigger = CONCAT(texto_trigger,'IF @antes != @ahora then',"\n");
-            SET texto_trigger = CONCAT(texto_trigger,"INSERT INTO tbl_auditoria_",nombre_modulo,"(i_id_registro,vc_tabla,tx_campos_antes,tx_campos_ahora,d_fecha,i_fk_id_usuario)","\n");
+            SET texto_trigger = CONCAT(texto_trigger,"INSERT INTO tbl_auditoria_",nombre_modulo,"(in_id_registro,vc_tabla,tx_campos_antes,tx_campos_ahora,d_fecha,i_fk_id_usuario)","\n");
             SET texto_trigger = CONCAT(texto_trigger,"VALUES(",pk,pkcampo,",'",nombre_tabla,"',@antes,@ahora,NOW(),@user_id);","\n");
             SET texto_trigger = CONCAT(texto_trigger,"END IF;","\n");
             SET texto_trigger = CONCAT(texto_trigger,"END","\n");
